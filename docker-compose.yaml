@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - app_network
+
+  gateway:
+    build:
+      context: .
+      dockerfile: ./gateway/Dockerfile
+    environment:
+      RABBIT_URI: amqp://admin:admin@rabbitmq:5672
+    ports:
+      - "7654:7654"
+    depends_on:
+      - rabbitmq
+    networks:
+      - app_network
+
+  storage:
+    build:
+      context: .
+      dockerfile: ./storage/Dockerfile
+    environment:
+      RABBIT_URI: amqp://admin:admin@rabbitmq:5672
+    depends_on:
+      - rabbitmq
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
